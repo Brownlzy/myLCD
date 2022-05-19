@@ -42,6 +42,7 @@ int get_IP(const char *eth_inf, char *ip);
 char *get_sysinfo(int opt, char *string);
 char *get_Rom(char *string);
 void getCurrentDownloadRates(char *intface, int opt, long int *save_rate);
+char getDefaultIface();
 
 void DashBoard_myLCD(void)
 {
@@ -85,7 +86,7 @@ void DashBoard_myLCD(void)
     }
 
     /* LCD Init */
-    printf("===myLCD v0.4 By Brownlzy===\r\n");
+    printf("===myLCD v0.5 By Brownlzy===\r\n");
     LCD_2IN_Init();
     LCD_2IN_Clear(WHITE);
     LCD_SetBacklight(1010);
@@ -115,7 +116,7 @@ void DashBoard_myLCD(void)
         /*2.Drawing on the image  8x5 12x7 16x11 20x15 14x17*/
         Paint_DrawString_EN(35, 13, "Raspberry Pi 4B", &Font20, BLACK, WHITE);
         Paint_DrawString_EN(255, 17, "rev1.4", &Font12, BLACK, WHITE);
-        Paint_DrawString_EN(5, 36, "-----------myLCD v0.4 By Brownlzy-----------", &Font12, BLACK, GRAY);
+        Paint_DrawString_EN(5, 36, "-----------myLCD v0.5 By Brownlzy-----------", &Font12, BLACK, GRAY);
 
         Paint_DrawString_EN(5, 54, " TIME : ", &Font16, BLACK, WHITE);
         NowTime(string);
@@ -148,9 +149,13 @@ void DashBoard_myLCD(void)
 
 	//显示IP
         Paint_DrawString_EN(5, 103, "   IP : ", &Font16, BLACK, WHITE);
+        char iface=getDefaultIface();
         if (get_IP("wlan0", string) == 0)
         {
-            Paint_DrawString_EN(96, 91, "wlan0  ", &Font12, BLACK, WHITE);
+            if(iface=='w')
+                Paint_DrawString_EN(96, 91, "wlan0 *", &Font12, BLACK, WHITE);
+            else
+                Paint_DrawString_EN(96, 91, "wlan0  ", &Font12, BLACK, WHITE);
             Paint_DrawString_EN(156, 91, string, &Font12, BLACK, WHITE);
             w = '1';
         }
@@ -162,7 +167,10 @@ void DashBoard_myLCD(void)
         }
         if (get_IP("eth0", string) == 0)
         {
-            Paint_DrawString_EN(96, 103, "eth0  ", &Font12, BLACK, WHITE);
+            if(iface=='e')
+                Paint_DrawString_EN(96, 103, "eth0 *", &Font12, BLACK, WHITE);
+            else
+                Paint_DrawString_EN(96, 103, "eth0  ", &Font12, BLACK, WHITE);
             Paint_DrawString_EN(156, 103, string, &Font12, BLACK, WHITE);
             e = '1';
         }
@@ -174,7 +182,10 @@ void DashBoard_myLCD(void)
         }
         if (get_IP("usb0", string) == 0)
         {
-            Paint_DrawString_EN(96, 115, "usb0  ", &Font12, BLACK, WHITE);
+            if(iface=='u')
+                Paint_DrawString_EN(96, 115, "usb0 *", &Font12, BLACK, WHITE);
+            else
+                Paint_DrawString_EN(96, 115, "usb0  ", &Font12, BLACK, WHITE);
             Paint_DrawString_EN(156, 115, string, &Font12, BLACK, WHITE);
             u = '1';
         }
@@ -533,4 +544,32 @@ void getCurrentDownloadRates(char *intface, int opt, long int *save_rate)
         *save_rate = 0.01;
     fclose(net_dev_file); //关闭文件
     return;
+}
+
+char getDefaultIface()
+{
+    char Cmd[100]={0};
+    char buffer[1024];
+	char readline[100]={0};
+	memset( Cmd, 0, sizeof( Cmd ) );
+	sprintf( Cmd,"netstat -r|grep default");
+    FILE* fp = popen( Cmd, "r" );
+ 
+    if ( NULL == fp )
+    {
+        return 'n';
+    }
+ 
+    memset( buffer, 0, sizeof( buffer ) );
+    if ( NULL == fgets( buffer,sizeof( buffer ),fp ))
+    {
+        pclose(fp);
+        return 'n';
+    }
+    else
+    {
+        sscanf(buffer, "%s %s %s %s %s %s %s %s", readline, readline, readline, readline, readline, readline, readline, readline);
+        pclose(fp);
+        return readline[0];
+    }
 }

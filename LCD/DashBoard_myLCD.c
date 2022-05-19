@@ -309,8 +309,8 @@ void DashBoard_myLCD(void)
         }
     if (u == '1')
         {
-            getCurrentDownloadRates("eth0", 0, &u_end_download_rates);
-            getCurrentDownloadRates("eth0", 1, &u_end_upload_rates);
+            getCurrentDownloadRates("usb0", 0, &u_end_download_rates);
+            getCurrentDownloadRates("usb0", 1, &u_end_upload_rates);
             u_download_rates = u_end_download_rates - u_start_download_rates;
             u_start_download_rates = u_end_download_rates;
             char *u_rate;
@@ -328,7 +328,7 @@ void DashBoard_myLCD(void)
             {
                 u_rate = "B/s";
             }
-            sprintf(string, "e A %.2lf %s", u_download_rates, u_rate);
+            sprintf(string, "u A %.2lf %s", u_download_rates, u_rate);
             Paint_DrawString_EN(96, 222, string, &Font12, BLACK, WHITE);
             u_upload_rates = u_end_upload_rates - u_start_upload_rates;
             u_start_upload_rates = u_end_upload_rates;

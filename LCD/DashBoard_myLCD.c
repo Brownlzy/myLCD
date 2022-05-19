@@ -43,6 +43,7 @@ char *get_sysinfo(int opt, char *string);
 char *get_Rom(char *string);
 void getCurrentDownloadRates(char *intface, int opt, long int *save_rate);
 char getDefaultIface();
+char *getWeekDay(char* weekday);
 
 void DashBoard_myLCD(void)
 {
@@ -86,7 +87,7 @@ void DashBoard_myLCD(void)
     }
 
     /* LCD Init */
-    printf("===myLCD v0.5 By Brownlzy===\r\n");
+    printf("===myLCD v0.7 By Brownlzy===\r\n");
     LCD_2IN_Init();
     LCD_2IN_Clear(WHITE);
     LCD_SetBacklight(1010);
@@ -105,6 +106,7 @@ void DashBoard_myLCD(void)
     getCurrentDownloadRates("eth0", 1, &e_start_upload_rates);   //获取当前流量，并保存在start_download_rates里
     getCurrentDownloadRates("usb0", 0, &u_start_download_rates); //获取当前流量，并保存在start_download_rates里
     getCurrentDownloadRates("usb0", 1, &u_start_upload_rates);   //获取当前流量，并保存在start_download_rates里
+
     do
     {
 	    //start = clock();
@@ -116,15 +118,16 @@ void DashBoard_myLCD(void)
         /*2.Drawing on the image  8x5 12x7 16x11 20x15 14x17*/
         Paint_DrawString_EN(35, 13, "Raspberry Pi 4B", &Font20, BLACK, WHITE);
         Paint_DrawString_EN(255, 17, "rev1.4", &Font12, BLACK, WHITE);
-        Paint_DrawString_EN(5, 36, "-----------myLCD v0.5 By Brownlzy-----------", &Font12, BLACK, GRAY);
+        Paint_DrawString_EN(5, 36, "-----------myLCD v0.7 By Brownlzy-----------", &Font12, BLACK, GRAY);
 
+    //显示时间
         Paint_DrawString_EN(5, 54, " TIME : ", &Font16, BLACK, WHITE);
         NowTime(string);
         Paint_DrawString_EN(96, 55, string, &Font12, BLACK, CYAN);
-        get_sysinfo(2, string);
-        Paint_DrawString_EN(239, 55, string, &Font12, BLACK, WHITE);
+        getWeekDay(string);
+        Paint_DrawString_EN(193, 55, string, &Font12, BLACK, GREEN);
 
-        //计算cpu使用率
+    //计算cpu使用率
         Paint_DrawString_EN(5, 73, "  CPU : ", &Font16, BLACK, WHITE);
         get_cpuoccupy((cpu_occupy_t *)&cpu_stat2);
         cpu = cal_cpuoccupy((cpu_occupy_t *)&cpu_stat1, (cpu_occupy_t *)&cpu_stat2);
@@ -136,93 +139,103 @@ void DashBoard_myLCD(void)
             Paint_DrawString_EN(96, 74, string, &Font12, BLACK, RED);
         else
             Paint_DrawString_EN(96, 74, string, &Font12, BLACK, YELLOW);
-
 	//显示温度
         get_temperature(string);
-        Paint_DrawString_EN(154, 73, "TEMP : ", &Font16, BLACK, WHITE);
+        //Paint_DrawString_EN(154, 73, "TEMP : ", &Font16, BLACK, WHITE);
         if (string[0] < '3')
-            Paint_DrawString_EN(232, 74, get_temperature(string), &Font12, BLACK, GREEN);
+            Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, GREEN);
         else if (string[0] > '3')
-            Paint_DrawString_EN(232, 74, get_temperature(string), &Font12, BLACK, RED);
+            Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, RED);
         else
-            Paint_DrawString_EN(232, 74, get_temperature(string), &Font12, BLACK, YELLOW);
+            Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, YELLOW);
+
+    //显示开机时间
+        get_sysinfo(2, string);
+        Paint_DrawString_EN(232, 74, string, &Font12, BLACK, WHITE);
+
+	//显示内存信息
+        Paint_DrawString_EN(5, 95, "  RAM : ", &Font16, BLACK, WHITE);
+        get_sysinfo(0, string);
+        if (string[6] <= '3')
+            Paint_DrawString_EN(96, 92, string, &Font12, BLACK, GREEN);
+        else if (string[6] > '6')
+            Paint_DrawString_EN(96, 92, string, &Font12, BLACK, RED);
+        else
+            Paint_DrawString_EN(96, 92, string, &Font12, BLACK, YELLOW);
+        get_sysinfo(1, string);
+        if (string[6] <= '3')
+        Paint_DrawString_EN(96, 104, string, &Font12, BLACK, GREEN);
+        else if (string[6] > '6')
+        Paint_DrawString_EN(96, 104, string, &Font12, BLACK, RED);
+        else
+        Paint_DrawString_EN(96, 104, string, &Font12, BLACK, YELLOW);
+
+	//获取硬盘空间
+        Paint_DrawString_EN(5, 121, "  ROM : ", &Font16, BLACK, WHITE);
+        get_Rom(string);
+        if (string[0] < '8')
+        Paint_DrawString_EN(96, 122, string, &Font12, BLACK, CYAN);
+        else
+        Paint_DrawString_EN(96, 122, string, &Font12, BLACK, RED);
 
 	//显示IP
-        Paint_DrawString_EN(5, 103, "   IP : ", &Font16, BLACK, WHITE);
+        //Paint_DrawString_EN(5, 103, "   IP : ", &Font16, BLACK, WHITE);
+        Paint_DrawString_EN(5, 178, "  NET : ", &Font16, BLACK, WHITE);
         char iface=getDefaultIface();
         if (get_IP("wlan0", string) == 0)
         {
             if(iface=='w')
-                Paint_DrawString_EN(96, 91, "wlan0 *", &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(96, 149, ">", &Font16, BLACK, GREEN);
             else
-                Paint_DrawString_EN(96, 91, "wlan0  ", &Font12, BLACK, WHITE);
-            Paint_DrawString_EN(156, 91, string, &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(96, 149, "+", &Font16, BLACK, WHITE);
+            Paint_DrawString_EN(110, 145, "wlan0", &Font12, BLACK, WHITE);
+            Paint_DrawString_EN(164, 145, string, &Font12, BLACK, WHITE);
             w = '1';
         }
         else
         {
-            Paint_DrawString_EN(96, 91, "wlan0  ", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(156, 91, "0.0.0.0", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(96, 149, "-", &Font16, BLACK, GRAY);
+            Paint_DrawString_EN(110, 145, "wlan0", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(164, 145, "0.0.0.0", &Font12, BLACK, GRAY);
             w = '0';
         }
         if (get_IP("eth0", string) == 0)
         {
             if(iface=='e')
-                Paint_DrawString_EN(96, 103, "eth0 *", &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(96, 180, ">", &Font16, BLACK, GREEN);
             else
-                Paint_DrawString_EN(96, 103, "eth0  ", &Font12, BLACK, WHITE);
-            Paint_DrawString_EN(156, 103, string, &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(96, 180, "+", &Font16, BLACK, WHITE);
+            Paint_DrawString_EN(110, 176, "eth0", &Font12, BLACK, WHITE);
+            Paint_DrawString_EN(164, 176, string, &Font12, BLACK, WHITE);
             e = '1';
         }
         else
         {
-            Paint_DrawString_EN(96, 103, "eth0  ", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(156, 103, "0.0.0.0", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(96, 180, "-", &Font16, BLACK, GRAY);
+            Paint_DrawString_EN(110, 176, "eth0", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(164, 176, "0.0.0.0", &Font12, BLACK, GRAY);
             e = '0';
         }
         if (get_IP("usb0", string) == 0)
         {
             if(iface=='u')
-                Paint_DrawString_EN(96, 115, "usb0 *", &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(96, 211, ">", &Font16, BLACK, GREEN);
             else
-                Paint_DrawString_EN(96, 115, "usb0  ", &Font12, BLACK, WHITE);
-            Paint_DrawString_EN(156, 115, string, &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(96, 211, "+", &Font16, BLACK, WHITE);
+            Paint_DrawString_EN(110, 207, "usb0", &Font12, BLACK, WHITE);
+            Paint_DrawString_EN(164, 207, string, &Font12, BLACK, WHITE);
             u = '1';
         }
         else
         {
-            Paint_DrawString_EN(96, 115, "usb0  ", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(156, 115, "0.0.0.0", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(96, 211, "-", &Font16, BLACK, GRAY);
+            Paint_DrawString_EN(110, 207, "usb0", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(164, 207, "0.0.0.0", &Font12, BLACK, GRAY);
             u = '0';
         }
 
-	//显示内存信息
-        Paint_DrawString_EN(5, 138, "  RAM : ", &Font16, BLACK, WHITE);
-        get_sysinfo(0, string);
-        if (string[6] <= '3')
-            Paint_DrawString_EN(96, 132, string, &Font12, BLACK, GREEN);
-        else if (string[6] > '6')
-            Paint_DrawString_EN(96, 132, string, &Font12, BLACK, RED);
-        else
-            Paint_DrawString_EN(96, 132, string, &Font12, BLACK, YELLOW);
-        get_sysinfo(1, string);
-        if (string[6] <= '3')
-        Paint_DrawString_EN(96, 144, string, &Font12, BLACK, GREEN);
-        else if (string[6] > '6')
-        Paint_DrawString_EN(96, 144, string, &Font12, BLACK, RED);
-        else
-        Paint_DrawString_EN(96, 144, string, &Font12, BLACK, YELLOW);
-
-	//获取硬盘空间
-        Paint_DrawString_EN(5, 166, "  ROM : ", &Font16, BLACK, WHITE);
-        get_Rom(string);
-        if (string[0] < '8')
-        Paint_DrawString_EN(96, 167, string, &Font12, BLACK, CYAN);
-        else
-        Paint_DrawString_EN(96, 167, string, &Font12, BLACK, RED);
-
 	//计算网速
-        Paint_DrawString_EN(5, 204, "  NET : ", &Font16, BLACK, WHITE);
+        //Paint_DrawString_EN(5, 204, "  NET : ", &Font16, BLACK, WHITE);
         if (w == '1')
         {
             getCurrentDownloadRates("wlan0", 0, &w_end_download_rates);
@@ -244,8 +257,8 @@ void DashBoard_myLCD(void)
             {
                 w_rate = "B/s";
             }
-            sprintf(string, "w A %.2lf %s", w_download_rates, w_rate);
-            Paint_DrawString_EN(96, 194, string, &Font12, BLACK, WHITE);
+            sprintf(string, "A %.2lf %s", w_download_rates, w_rate);
+            Paint_DrawString_EN(110, 157, string, &Font12, BLACK, WHITE);
             w_upload_rates = w_end_upload_rates - w_start_upload_rates;
             w_start_upload_rates = w_end_upload_rates;
             if (w_upload_rates >= 1000 && w_upload_rates < 1000000)
@@ -263,12 +276,12 @@ void DashBoard_myLCD(void)
                 w_rate = "B/s";
             }
             sprintf(string, "V %.2lf %s", w_upload_rates, w_rate);
-            Paint_DrawString_EN(210, 194, string, &Font12, BLACK, WHITE);
+            Paint_DrawString_EN(210, 157, string, &Font12, BLACK, WHITE);
         }
         else
         {
-            Paint_DrawString_EN(96, 194, "w A 0.00 B/s", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(210, 194, "V 0.00 B/s", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(110, 157, "A 0.00 B/s", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(210, 157, "V 0.00 B/s", &Font12, BLACK, GRAY);
         }
 
         if (e == '1')
@@ -292,8 +305,8 @@ void DashBoard_myLCD(void)
             {
                 e_rate = "B/s";
             }
-            sprintf(string, "e A %.2lf %s", e_download_rates, e_rate);
-            Paint_DrawString_EN(96, 208, string, &Font12, BLACK, WHITE);
+            sprintf(string, "A %.2lf %s", e_download_rates, e_rate);
+            Paint_DrawString_EN(110, 188, string, &Font12, BLACK, WHITE);
             e_upload_rates = e_end_upload_rates - e_start_upload_rates;
             e_start_upload_rates = e_end_upload_rates;
             if (e_upload_rates >= 1000 && e_upload_rates < 1000000)
@@ -311,12 +324,12 @@ void DashBoard_myLCD(void)
                 e_rate = "B/s";
             }
             sprintf(string, "V %.2lf %s", e_upload_rates, e_rate);
-            Paint_DrawString_EN(210, 208, string, &Font12, BLACK, WHITE);
+            Paint_DrawString_EN(210, 188, string, &Font12, BLACK, WHITE);
         }
         else
         {
-            Paint_DrawString_EN(96, 208, "e A 0.00 B/s", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(210, 208, "V 0.00 B/s", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(110, 188, "A 0.00 B/s", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(210, 188, "V 0.00 B/s", &Font12, BLACK, GRAY);
         }
     if (u == '1')
         {
@@ -339,8 +352,8 @@ void DashBoard_myLCD(void)
             {
                 u_rate = "B/s";
             }
-            sprintf(string, "u A %.2lf %s", u_download_rates, u_rate);
-            Paint_DrawString_EN(96, 222, string, &Font12, BLACK, WHITE);
+            sprintf(string, "A %.2lf %s", u_download_rates, u_rate);
+            Paint_DrawString_EN(110, 219, string, &Font12, BLACK, WHITE);
             u_upload_rates = u_end_upload_rates - u_start_upload_rates;
             u_start_upload_rates = u_end_upload_rates;
             if (u_upload_rates >= 1000 && u_upload_rates < 1000000)
@@ -358,12 +371,12 @@ void DashBoard_myLCD(void)
                 u_rate = "B/s";
             }
             sprintf(string, "V %.2lf %s", u_upload_rates, u_rate);
-            Paint_DrawString_EN(210, 222, string, &Font12, BLACK, WHITE);
+            Paint_DrawString_EN(210, 219, string, &Font12, BLACK, WHITE);
         }
         else
         {
-            Paint_DrawString_EN(96, 222, "u A 0.00 B/s", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(210, 222, "V 0.00 B/s", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(110, 219, "A 0.00 B/s", &Font12, BLACK, GRAY);
+            Paint_DrawString_EN(210, 219, "V 0.00 B/s", &Font12, BLACK, GRAY);
         }
 
         /*3.Refresh the picture in RAM to LCD*/
@@ -390,7 +403,7 @@ char *NowTime(char *string)
     struct tm *timenow;
     time(&now);
     timenow = localtime(&now);
-    sprintf(string, "%d/%d/%d %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    sprintf(string, "CST %d/%d/%d     %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon+1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
     return string;
 }
 
@@ -572,4 +585,49 @@ char getDefaultIface()
         pclose(fp);
         return readline[0];
     }
+}
+char* getWeekDay(char* weekday)
+{
+    time_t now;
+    struct tm *timenow;
+    int y,m,d,w;
+    time(&now);
+    timenow = localtime(&now);
+    //sprintf(string, "%d/%d/%d %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    y=timenow->tm_year+1900;
+    m=timenow->tm_mon+1;
+    d=timenow->tm_mday;
+    if(m==1||m==2) 
+    {
+        m+=12;
+        y-=1;
+    }
+    w=(d+2*m+3*(m+1)/5+y+y/4-y/100+y/400)%7;
+    switch(w)
+    {
+        case 0:
+            strcpy(weekday,"Mon");
+            break;
+        case 1:
+            strcpy(weekday,"Tue");
+            break;
+        case 2:
+            strcpy(weekday,"Wen");
+            break;
+        case 3:
+            strcpy(weekday,"Thr");
+            break;
+        case 4:
+            strcpy(weekday,"Fri");
+            break;
+        case 5:
+            strcpy(weekday,"Sat");
+            break;
+        case 6:
+            strcpy(weekday,"Sun");
+            break;
+        default:
+            strcpy(weekday,"Err");
+    }
+    return weekday;
 }

@@ -43,7 +43,7 @@ char *get_sysinfo(int opt, char *string);
 char *get_Rom(char *string);
 void getCurrentDownloadRates(char *intface, int opt, long int *save_rate);
 char getDefaultIface();
-char *getWeekDay(char* weekday);
+char *getWeekDay(char *weekday);
 
 void DashBoard_myLCD(void)
 {
@@ -73,8 +73,8 @@ void DashBoard_myLCD(void)
     char e = '0';
     char u = '0';
 
-    //clock_t start, finish;
-    //double Total_time;
+    // clock_t start, finish;
+    // double Total_time;
 
     // Exception handling:ctrl + c
     signal(SIGINT, Handler_2IN_LCD);
@@ -100,16 +100,16 @@ void DashBoard_myLCD(void)
         exit(0);
     }
     get_cpuoccupy((cpu_occupy_t *)&cpu_stat1);
-    getCurrentDownloadRates("wlan0", 0, &w_start_download_rates);  //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("wlan0", 1, &w_start_upload_rates);    //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("eth0", 0, &e_start_download_rates); //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("eth0", 1, &e_start_upload_rates);   //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("usb0", 0, &u_start_download_rates); //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("usb0", 1, &u_start_upload_rates);   //获取当前流量，并保存在start_download_rates里
+    getCurrentDownloadRates("wlan0", 0, &w_start_download_rates); //获取当前流量，并保存在start_download_rates里
+    getCurrentDownloadRates("wlan0", 1, &w_start_upload_rates);   //获取当前流量，并保存在start_download_rates里
+    getCurrentDownloadRates("eth0", 0, &e_start_download_rates);  //获取当前流量，并保存在start_download_rates里
+    getCurrentDownloadRates("eth0", 1, &e_start_upload_rates);    //获取当前流量，并保存在start_download_rates里
+    getCurrentDownloadRates("usb0", 0, &u_start_download_rates);  //获取当前流量，并保存在start_download_rates里
+    getCurrentDownloadRates("usb0", 1, &u_start_upload_rates);    //获取当前流量，并保存在start_download_rates里
 
     do
     {
-	    //start = clock();
+        // start = clock();
         /*1.Create a new image cache named IMAGE_RGB and fill it with black*/
         Paint_NewImage(BlackImage, LCD_2IN_WIDTH, LCD_2IN_HEIGHT, 90, BLACK, 16);
         Paint_Clear(BLACK);
@@ -120,14 +120,14 @@ void DashBoard_myLCD(void)
         Paint_DrawString_EN(255, 17, "rev1.4", &Font12, BLACK, WHITE);
         Paint_DrawString_EN(5, 36, "-----------myLCD v0.7 By Brownlzy-----------", &Font12, BLACK, GRAY);
 
-    //显示时间
+        //显示时间
         Paint_DrawString_EN(5, 54, " TIME : ", &Font16, BLACK, WHITE);
         NowTime(string);
         Paint_DrawString_EN(96, 55, string, &Font12, BLACK, CYAN);
         getWeekDay(string);
-        Paint_DrawString_EN(193, 55, string, &Font12, BLACK, GREEN);
+        Paint_DrawString_EN(194, 55, string, &Font12, BLACK, GREEN);
 
-    //计算cpu使用率
+        //计算cpu使用率
         Paint_DrawString_EN(5, 73, "  CPU : ", &Font16, BLACK, WHITE);
         get_cpuoccupy((cpu_occupy_t *)&cpu_stat2);
         cpu = cal_cpuoccupy((cpu_occupy_t *)&cpu_stat1, (cpu_occupy_t *)&cpu_stat2);
@@ -139,9 +139,9 @@ void DashBoard_myLCD(void)
             Paint_DrawString_EN(96, 74, string, &Font12, BLACK, RED);
         else
             Paint_DrawString_EN(96, 74, string, &Font12, BLACK, YELLOW);
-	//显示温度
+        //显示温度
         get_temperature(string);
-        //Paint_DrawString_EN(154, 73, "TEMP : ", &Font16, BLACK, WHITE);
+        // Paint_DrawString_EN(154, 73, "TEMP : ", &Font16, BLACK, WHITE);
         if (string[0] < '3')
             Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, GREEN);
         else if (string[0] > '3')
@@ -149,42 +149,42 @@ void DashBoard_myLCD(void)
         else
             Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, YELLOW);
 
-    //显示开机时间
+        //显示开机时间
         get_sysinfo(2, string);
         Paint_DrawString_EN(232, 74, string, &Font12, BLACK, WHITE);
 
-	//显示内存信息
+        //显示内存信息
         Paint_DrawString_EN(5, 95, "  RAM : ", &Font16, BLACK, WHITE);
         get_sysinfo(0, string);
-        if (string[6] <= '3')
-            Paint_DrawString_EN(96, 92, string, &Font12, BLACK, GREEN);
-        else if (string[6] > '6')
+        if (string[6] > '6' || (string[6] == '1' && string[7] == '0' && string[8] == '0'))
             Paint_DrawString_EN(96, 92, string, &Font12, BLACK, RED);
+        else if (string[6] <= '3')
+            Paint_DrawString_EN(96, 92, string, &Font12, BLACK, GREEN);
         else
             Paint_DrawString_EN(96, 92, string, &Font12, BLACK, YELLOW);
         get_sysinfo(1, string);
-        if (string[6] <= '3')
-        Paint_DrawString_EN(96, 104, string, &Font12, BLACK, GREEN);
-        else if (string[6] > '6')
-        Paint_DrawString_EN(96, 104, string, &Font12, BLACK, RED);
+        if (string[6] > '6' || (string[6] == '1' && string[7] == '0' && string[8] == '0'))
+            Paint_DrawString_EN(96, 104, string, &Font12, BLACK, RED);
+        else if (string[6] <= '3')
+            Paint_DrawString_EN(96, 104, string, &Font12, BLACK, GREEN);
         else
-        Paint_DrawString_EN(96, 104, string, &Font12, BLACK, YELLOW);
+            Paint_DrawString_EN(96, 104, string, &Font12, BLACK, YELLOW);
 
-	//获取硬盘空间
+        //获取硬盘空间
         Paint_DrawString_EN(5, 121, "  ROM : ", &Font16, BLACK, WHITE);
         get_Rom(string);
         if (string[0] < '8')
-        Paint_DrawString_EN(96, 122, string, &Font12, BLACK, CYAN);
+            Paint_DrawString_EN(96, 122, string, &Font12, BLACK, CYAN);
         else
-        Paint_DrawString_EN(96, 122, string, &Font12, BLACK, RED);
+            Paint_DrawString_EN(96, 122, string, &Font12, BLACK, RED);
 
-	//显示IP
-        //Paint_DrawString_EN(5, 103, "   IP : ", &Font16, BLACK, WHITE);
+        //显示IP
+        // Paint_DrawString_EN(5, 103, "   IP : ", &Font16, BLACK, WHITE);
         Paint_DrawString_EN(5, 178, "  NET : ", &Font16, BLACK, WHITE);
-        char iface=getDefaultIface();
+        char iface = getDefaultIface();
         if (get_IP("wlan0", string) == 0)
         {
-            if(iface=='w')
+            if (iface == 'w')
                 Paint_DrawString_EN(96, 149, ">", &Font16, BLACK, GREEN);
             else
                 Paint_DrawString_EN(96, 149, "+", &Font16, BLACK, WHITE);
@@ -201,7 +201,7 @@ void DashBoard_myLCD(void)
         }
         if (get_IP("eth0", string) == 0)
         {
-            if(iface=='e')
+            if (iface == 'e')
                 Paint_DrawString_EN(96, 180, ">", &Font16, BLACK, GREEN);
             else
                 Paint_DrawString_EN(96, 180, "+", &Font16, BLACK, WHITE);
@@ -218,7 +218,7 @@ void DashBoard_myLCD(void)
         }
         if (get_IP("usb0", string) == 0)
         {
-            if(iface=='u')
+            if (iface == 'u')
                 Paint_DrawString_EN(96, 211, ">", &Font16, BLACK, GREEN);
             else
                 Paint_DrawString_EN(96, 211, "+", &Font16, BLACK, WHITE);
@@ -234,8 +234,8 @@ void DashBoard_myLCD(void)
             u = '0';
         }
 
-	//计算网速
-        //Paint_DrawString_EN(5, 204, "  NET : ", &Font16, BLACK, WHITE);
+        //计算网速
+        // Paint_DrawString_EN(5, 204, "  NET : ", &Font16, BLACK, WHITE);
         if (w == '1')
         {
             getCurrentDownloadRates("wlan0", 0, &w_end_download_rates);
@@ -331,7 +331,7 @@ void DashBoard_myLCD(void)
             Paint_DrawString_EN(110, 188, "A 0.00 B/s", &Font12, BLACK, GRAY);
             Paint_DrawString_EN(210, 188, "V 0.00 B/s", &Font12, BLACK, GRAY);
         }
-    if (u == '1')
+        if (u == '1')
         {
             getCurrentDownloadRates("usb0", 0, &u_end_download_rates);
             getCurrentDownloadRates("usb0", 1, &u_end_upload_rates);
@@ -381,14 +381,14 @@ void DashBoard_myLCD(void)
 
         /*3.Refresh the picture in RAM to LCD*/
         LCD_2IN_Display((UBYTE *)BlackImage);
-	//finish = clock();
-	//Total_time = (double)(finish - start) / CLOCKS_PER_SEC * 1000;
+        // finish = clock();
+        // Total_time = (double)(finish - start) / CLOCKS_PER_SEC * 1000;
 
-//	if (Total_time < 1000 && Total_time >0)
-//	    DEV_Delay_ms(1000-(int)Total_time);
-//	else
-	    DEV_Delay_ms(889);
-//	printf("%lf\n",Total_time);
+        //	if (Total_time < 1000 && Total_time >0)
+        //	    DEV_Delay_ms(1000-(int)Total_time);
+        //	else
+        DEV_Delay_ms(889);
+        //	printf("%lf\n",Total_time);
     } while (1);
 
     /* Module Exit */
@@ -403,7 +403,7 @@ char *NowTime(char *string)
     struct tm *timenow;
     time(&now);
     timenow = localtime(&now);
-    sprintf(string, "CST %d/%d/%d     %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon+1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    sprintf(string, "CST %d/%d/%d     %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
     return string;
 }
 
@@ -561,20 +561,20 @@ void getCurrentDownloadRates(char *intface, int opt, long int *save_rate)
 
 char getDefaultIface()
 {
-    char Cmd[100]={0};
+    char Cmd[100] = {0};
     char buffer[1024];
-	char readline[100]={0};
-	memset( Cmd, 0, sizeof( Cmd ) );
-	sprintf( Cmd,"netstat -r|grep default");
-    FILE* fp = popen( Cmd, "r" );
- 
-    if ( NULL == fp )
+    char readline[100] = {0};
+    memset(Cmd, 0, sizeof(Cmd));
+    sprintf(Cmd, "netstat -r|grep default");
+    FILE *fp = popen(Cmd, "r");
+
+    if (NULL == fp)
     {
         return 'n';
     }
- 
-    memset( buffer, 0, sizeof( buffer ) );
-    if ( NULL == fgets( buffer,sizeof( buffer ),fp ))
+
+    memset(buffer, 0, sizeof(buffer));
+    if (NULL == fgets(buffer, sizeof(buffer), fp))
     {
         pclose(fp);
         return 'n';
@@ -586,48 +586,48 @@ char getDefaultIface()
         return readline[0];
     }
 }
-char* getWeekDay(char* weekday)
+char *getWeekDay(char *weekday)
 {
     time_t now;
     struct tm *timenow;
-    int y,m,d,w;
+    int y, m, d, w;
     time(&now);
     timenow = localtime(&now);
-    //sprintf(string, "%d/%d/%d %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
-    y=timenow->tm_year+1900;
-    m=timenow->tm_mon+1;
-    d=timenow->tm_mday;
-    if(m==1||m==2) 
+    // sprintf(string, "%d/%d/%d %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    y = timenow->tm_year + 1900;
+    m = timenow->tm_mon + 1;
+    d = timenow->tm_mday;
+    if (m == 1 || m == 2)
     {
-        m+=12;
-        y-=1;
+        m += 12;
+        y -= 1;
     }
-    w=(d+2*m+3*(m+1)/5+y+y/4-y/100+y/400)%7;
-    switch(w)
+    w = (d + 2 * m + 3 * (m + 1) / 5 + y + y / 4 - y / 100 + y / 400) % 7;
+    switch (w)
     {
-        case 0:
-            strcpy(weekday,"Mon");
-            break;
-        case 1:
-            strcpy(weekday,"Tue");
-            break;
-        case 2:
-            strcpy(weekday,"Wen");
-            break;
-        case 3:
-            strcpy(weekday,"Thr");
-            break;
-        case 4:
-            strcpy(weekday,"Fri");
-            break;
-        case 5:
-            strcpy(weekday,"Sat");
-            break;
-        case 6:
-            strcpy(weekday,"Sun");
-            break;
-        default:
-            strcpy(weekday,"Err");
+    case 0:
+        strcpy(weekday, "Mon");
+        break;
+    case 1:
+        strcpy(weekday, "Tue");
+        break;
+    case 2:
+        strcpy(weekday, "Wen");
+        break;
+    case 3:
+        strcpy(weekday, "Thr");
+        break;
+    case 4:
+        strcpy(weekday, "Fri");
+        break;
+    case 5:
+        strcpy(weekday, "Sat");
+        break;
+    case 6:
+        strcpy(weekday, "Sun");
+        break;
+    default:
+        strcpy(weekday, "Err");
     }
     return weekday;
 }

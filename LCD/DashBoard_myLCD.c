@@ -87,7 +87,7 @@ void DashBoard_myLCD(void)
     }
 
     /* LCD Init */
-    printf("===myLCD v0.7 By Brownlzy===\r\n");
+    printf("===myLCD v0.8 By Brownlzy===\r\n");
     LCD_2IN_Init();
     LCD_2IN_Clear(WHITE);
     LCD_SetBacklight(1010);
@@ -118,14 +118,14 @@ void DashBoard_myLCD(void)
         /*2.Drawing on the image  8x5 12x7 16x11 20x15 14x17*/
         Paint_DrawString_EN(35, 13, "Raspberry Pi 4B", &Font20, BLACK, WHITE);
         Paint_DrawString_EN(255, 17, "rev1.4", &Font12, BLACK, WHITE);
-        Paint_DrawString_EN(5, 36, "-----------myLCD v0.7 By Brownlzy-----------", &Font12, BLACK, GRAY);
+        Paint_DrawString_EN(5, 36, "-----------myLCD v0.8 By Brownlzy-----------", &Font12, BLACK, GRAY);
 
         //显示时间
         Paint_DrawString_EN(5, 54, " TIME : ", &Font16, BLACK, WHITE);
         NowTime(string);
         Paint_DrawString_EN(96, 55, string, &Font12, BLACK, CYAN);
         getWeekDay(string);
-        Paint_DrawString_EN(194, 55, string, &Font12, BLACK, GREEN);
+        Paint_DrawString_EN(201, 55, string, &Font12, BLACK, GREEN);
 
         //计算cpu使用率
         Paint_DrawString_EN(5, 73, "  CPU : ", &Font16, BLACK, WHITE);
@@ -403,7 +403,7 @@ char *NowTime(char *string)
     struct tm *timenow;
     time(&now);
     timenow = localtime(&now);
-    sprintf(string, "CST %d/%d/%d     %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
+    sprintf(string, "CST %4d/%02d/%02d     %02d:%02d:%02d", timenow->tm_year + 1900, timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min, timenow->tm_sec);
     return string;
 }
 

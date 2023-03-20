@@ -6,13 +6,19 @@
 
 int main(int argc, char *argv[])
 {
-	if (argc != 2)
+	if (argc == 1)
 	{
+		setDefaultNetworkName();
+		DashBoard_myLCD();
+	}
+	else if(argc == 4)
+	{
+		setNetworkName(argv[1],argv[2],argv[3]);
 		DashBoard_myLCD();
 	}
 	else
 	{
-		exit(1);
+		printf("command error!");
 	}
 	return 0;
 }

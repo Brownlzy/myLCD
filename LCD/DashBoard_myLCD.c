@@ -42,36 +42,37 @@ int get_IP(const char *eth_inf, char *ip);
 char *get_sysinfo(int opt, char *string);
 char *get_Rom(char *string);
 void getCurrentDownloadRates(char *intface, int opt, long int *save_rate);
-char getDefaultIface();
+void getDefaultIface(char iface[]);
 char *getWeekDay(char *weekday);
+void setNetworkName(char *net1, char *net2, char *net3);
+void setDefaultNetworkName();
 
+char netName[3][50];
+void setNetworkName(char *net1, char *net2, char *net3)
+{
+    strcpy(netName[0],net1);
+    strcpy(netName[1],net2);
+    strcpy(netName[2],net3);
+}
+void setDefaultNetworkName()
+{
+    strcpy(netName[0],"eth0");
+    strcpy(netName[1],"wlan0");
+    strcpy(netName[2],"usb0");
+}
 void DashBoard_myLCD(void)
 {
     char string[64];
     cpu_occupy_t cpu_stat1;
     cpu_occupy_t cpu_stat2;
     double cpu;
-    long int w_start_download_rates; //保存结果时的流量计数
-    long int w_end_download_rates;
-    long int w_start_upload_rates; //保存开始时的流量计数
-    long int w_end_upload_rates;
-    double w_download_rates;
-    double w_upload_rates;
-    long int e_start_download_rates; //保存结果时的流量计数
-    long int e_end_download_rates;
-    long int e_start_upload_rates; //保存开始时的流量计数
-    long int e_end_upload_rates;
-    double e_download_rates;
-    double e_upload_rates;
-    long int u_start_download_rates; //保存结果时的流量计数
-    long int u_end_download_rates;
-    long int u_start_upload_rates; //保存开始时的流量计数
-    long int u_end_upload_rates;
-    double u_download_rates;
-    double u_upload_rates;
-    char w = '0';
-    char e = '0';
-    char u = '0';
+    long int start_download_rates[3]; //保存结果时的流量计数
+    long int end_download_rates[3];
+    long int start_upload_rates[3]; //保存开始时的流量计数
+    long int end_upload_rates[3];
+    double download_rates[3];
+    double upload_rates[3];
+    char nup[3] = {'0','0','0'};
 
     // clock_t start, finish;
     // double Total_time;
@@ -87,7 +88,7 @@ void DashBoard_myLCD(void)
     }
 
     /* LCD Init */
-    printf("===myLCD v0.8 By Brownlzy===\r\n");
+    printf("===myLCD v1.0 By Brownlzy===\r\n");
     LCD_2IN_Init();
     LCD_2IN_Clear(WHITE);
     LCD_SetBacklight(1010);
@@ -100,13 +101,11 @@ void DashBoard_myLCD(void)
         exit(0);
     }
     get_cpuoccupy((cpu_occupy_t *)&cpu_stat1);
-    getCurrentDownloadRates("wlan0", 0, &w_start_download_rates); //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("wlan0", 1, &w_start_upload_rates);   //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("eth0", 0, &e_start_download_rates);  //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("eth0", 1, &e_start_upload_rates);    //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("usb0", 0, &u_start_download_rates);  //获取当前流量，并保存在start_download_rates里
-    getCurrentDownloadRates("usb0", 1, &u_start_upload_rates);    //获取当前流量，并保存在start_download_rates里
-
+    for (int i = 0; i < 3; i++)
+    {
+        getCurrentDownloadRates(netName[i], 0, &start_download_rates[i]); //获取当前流量，并保存在start_download_rates里
+        getCurrentDownloadRates(netName[i], 1, &start_upload_rates[i]);   //获取当前流量，并保存在start_download_rates里
+    }
     do
     {
         // start = clock();
@@ -118,7 +117,7 @@ void DashBoard_myLCD(void)
         /*2.Drawing on the image  8x5 12x7 16x11 20x15 14x17*/
         Paint_DrawString_EN(35, 13, "Raspberry Pi 4B", &Font20, BLACK, WHITE);
         Paint_DrawString_EN(255, 17, "rev1.4", &Font12, BLACK, WHITE);
-        Paint_DrawString_EN(5, 36, "-----------myLCD v0.8 By Brownlzy-----------", &Font12, BLACK, GRAY);
+        Paint_DrawString_EN(5, 36, "-----------myLCD v1.0 By Brownlzy-----------", &Font12, BLACK, GRAY);
 
         //显示时间
         Paint_DrawString_EN(5, 54, " TIME : ", &Font16, BLACK, WHITE);
@@ -142,9 +141,9 @@ void DashBoard_myLCD(void)
         //显示温度
         get_temperature(string);
         // Paint_DrawString_EN(154, 73, "TEMP : ", &Font16, BLACK, WHITE);
-        if (string[0] < '3')
+        if (string[0] < '4')
             Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, GREEN);
-        else if (string[0] > '3')
+        else if (string[0] > '4')
             Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, RED);
         else
             Paint_DrawString_EN(164, 74, get_temperature(string), &Font12, BLACK, YELLOW);
@@ -181,204 +180,80 @@ void DashBoard_myLCD(void)
         //显示IP
         // Paint_DrawString_EN(5, 103, "   IP : ", &Font16, BLACK, WHITE);
         Paint_DrawString_EN(5, 178, "  NET : ", &Font16, BLACK, WHITE);
-        char iface = getDefaultIface();
-        if (get_IP("wlan0", string) == 0)
+        char iface[50];
+        getDefaultIface(iface);
+        for (int i = 0; i < 3; i++)
         {
-            if (iface == 'w')
-                Paint_DrawString_EN(96, 149, ">", &Font16, BLACK, GREEN);
+            if (get_IP(netName[i], string) == 0)
+            {
+                if (strcmp(iface, netName[i])==0)
+                    Paint_DrawString_EN(96, 149 + 31 * i, ">", &Font16, BLACK, GREEN);
+                else
+                    Paint_DrawString_EN(96, 149 + 31 * i, "+", &Font16, BLACK, WHITE);
+                Paint_DrawString_EN(110, 145 + 31 * i, netName[i], &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(164, 145 + 31 * i, string, &Font12, BLACK, WHITE);
+                nup[i] = '1';
+            }
             else
-                Paint_DrawString_EN(96, 149, "+", &Font16, BLACK, WHITE);
-            Paint_DrawString_EN(110, 145, "wlan0", &Font12, BLACK, WHITE);
-            Paint_DrawString_EN(164, 145, string, &Font12, BLACK, WHITE);
-            w = '1';
+            {
+                Paint_DrawString_EN(96, 149 + 31 * i, "-", &Font16, BLACK, GRAY);
+                Paint_DrawString_EN(110, 145 + 31 * i, netName[i], &Font12, BLACK, GRAY);
+                Paint_DrawString_EN(164, 145 + 31 * i, "0.0.0.0", &Font12, BLACK, GRAY);
+                nup[i] = '0';
+            }
         }
-        else
-        {
-            Paint_DrawString_EN(96, 149, "-", &Font16, BLACK, GRAY);
-            Paint_DrawString_EN(110, 145, "wlan0", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(164, 145, "0.0.0.0", &Font12, BLACK, GRAY);
-            w = '0';
-        }
-        if (get_IP("eth0", string) == 0)
-        {
-            if (iface == 'e')
-                Paint_DrawString_EN(96, 180, ">", &Font16, BLACK, GREEN);
-            else
-                Paint_DrawString_EN(96, 180, "+", &Font16, BLACK, WHITE);
-            Paint_DrawString_EN(110, 176, "eth0", &Font12, BLACK, WHITE);
-            Paint_DrawString_EN(164, 176, string, &Font12, BLACK, WHITE);
-            e = '1';
-        }
-        else
-        {
-            Paint_DrawString_EN(96, 180, "-", &Font16, BLACK, GRAY);
-            Paint_DrawString_EN(110, 176, "eth0", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(164, 176, "0.0.0.0", &Font12, BLACK, GRAY);
-            e = '0';
-        }
-        if (get_IP("usb0", string) == 0)
-        {
-            if (iface == 'u')
-                Paint_DrawString_EN(96, 211, ">", &Font16, BLACK, GREEN);
-            else
-                Paint_DrawString_EN(96, 211, "+", &Font16, BLACK, WHITE);
-            Paint_DrawString_EN(110, 207, "usb0", &Font12, BLACK, WHITE);
-            Paint_DrawString_EN(164, 207, string, &Font12, BLACK, WHITE);
-            u = '1';
-        }
-        else
-        {
-            Paint_DrawString_EN(96, 211, "-", &Font16, BLACK, GRAY);
-            Paint_DrawString_EN(110, 207, "usb0", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(164, 207, "0.0.0.0", &Font12, BLACK, GRAY);
-            u = '0';
-        }
-
         //计算网速
         // Paint_DrawString_EN(5, 204, "  NET : ", &Font16, BLACK, WHITE);
-        if (w == '1')
+        for (int i = 0; i < 3; i++)
         {
-            getCurrentDownloadRates("wlan0", 0, &w_end_download_rates);
-            getCurrentDownloadRates("wlan0", 1, &w_end_upload_rates);
-            w_download_rates = w_end_download_rates - w_start_download_rates;
-            w_start_download_rates = w_end_download_rates;
-            char *w_rate;
-            if (w_download_rates >= 1024 && w_download_rates < 1000000)
+            if (nup[i] == '1')
             {
-                w_download_rates /= 1024;
-                w_rate = "KB/s";
-            }
-            else if (w_download_rates > 1000000)
-            {
-                w_download_rates /= (1024 * 1024);
-                w_rate = "MB/s";
+                getCurrentDownloadRates(netName[i], 0, &end_download_rates[i]);
+                getCurrentDownloadRates(netName[i], 1, &end_upload_rates[i]);
+                download_rates[i] = end_download_rates[i] - start_download_rates[i];
+                start_download_rates[i] = end_download_rates[i];
+                char *rate;
+                if (download_rates[i] >= 1024 && download_rates[i] < 1000000)
+                {
+                    download_rates[i] /= 1024;
+                    rate = "KB/s";
+                }
+                else if (download_rates[i] > 1000000)
+                {
+                    download_rates[i] /= (1024 * 1024);
+                    rate = "MB/s";
+                }
+                else
+                {
+                    rate = "B/s";
+                }
+                sprintf(string, "A %.2lf %s", download_rates[i], rate);
+                Paint_DrawString_EN(110, 157+31*i, string, &Font12, BLACK, WHITE);
+                upload_rates[i] = end_upload_rates[i] - start_upload_rates[i];
+                start_upload_rates[i] = end_upload_rates[i];
+                if (upload_rates[i] >= 1000 && upload_rates[i] < 1000000)
+                {
+                    upload_rates[i] /= 1024;
+                    rate = "KB/s";
+                }
+                else if (upload_rates[i] > 1000000)
+                {
+                    upload_rates[i] /= (1024 * 1024);
+                    rate = "MB/s";
+                }
+                else
+                {
+                    rate = "B/s";
+                }
+                sprintf(string, "V %.2lf %s", upload_rates[i], rate);
+                Paint_DrawString_EN(210, 157+31*i, string, &Font12, BLACK, WHITE);
             }
             else
             {
-                w_rate = "B/s";
+                Paint_DrawString_EN(110, 157+31*i, "A 0.00 B/s", &Font12, BLACK, GRAY);
+                Paint_DrawString_EN(210, 157+31*i, "V 0.00 B/s", &Font12, BLACK, GRAY);
             }
-            sprintf(string, "A %.2lf %s", w_download_rates, w_rate);
-            Paint_DrawString_EN(110, 157, string, &Font12, BLACK, WHITE);
-            w_upload_rates = w_end_upload_rates - w_start_upload_rates;
-            w_start_upload_rates = w_end_upload_rates;
-            if (w_upload_rates >= 1000 && w_upload_rates < 1000000)
-            {
-                w_upload_rates /= 1024;
-                w_rate = "KB/s";
-            }
-            else if (w_upload_rates > 1000000)
-            {
-                w_upload_rates /= (1024 * 1024);
-                w_rate = "MB/s";
-            }
-            else
-            {
-                w_rate = "B/s";
-            }
-            sprintf(string, "V %.2lf %s", w_upload_rates, w_rate);
-            Paint_DrawString_EN(210, 157, string, &Font12, BLACK, WHITE);
         }
-        else
-        {
-            Paint_DrawString_EN(110, 157, "A 0.00 B/s", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(210, 157, "V 0.00 B/s", &Font12, BLACK, GRAY);
-        }
-
-        if (e == '1')
-        {
-            getCurrentDownloadRates("eth0", 0, &e_end_download_rates);
-            getCurrentDownloadRates("eth0", 1, &e_end_upload_rates);
-            e_download_rates = e_end_download_rates - e_start_download_rates;
-            e_start_download_rates = e_end_download_rates;
-            char *e_rate;
-            if (e_download_rates >= 1024 && e_download_rates < 1000000)
-            {
-                e_download_rates /= 1024;
-                e_rate = "KB/s";
-            }
-            else if (e_download_rates > 1000000)
-            {
-                e_download_rates /= (1024 * 1024);
-                e_rate = "MB/s";
-            }
-            else
-            {
-                e_rate = "B/s";
-            }
-            sprintf(string, "A %.2lf %s", e_download_rates, e_rate);
-            Paint_DrawString_EN(110, 188, string, &Font12, BLACK, WHITE);
-            e_upload_rates = e_end_upload_rates - e_start_upload_rates;
-            e_start_upload_rates = e_end_upload_rates;
-            if (e_upload_rates >= 1000 && e_upload_rates < 1000000)
-            {
-                e_upload_rates /= 1024;
-                e_rate = "KB/s";
-            }
-            else if (e_upload_rates > 1000000)
-            {
-                e_upload_rates /= (1024 * 1024);
-                e_rate = "MB/s";
-            }
-            else
-            {
-                e_rate = "B/s";
-            }
-            sprintf(string, "V %.2lf %s", e_upload_rates, e_rate);
-            Paint_DrawString_EN(210, 188, string, &Font12, BLACK, WHITE);
-        }
-        else
-        {
-            Paint_DrawString_EN(110, 188, "A 0.00 B/s", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(210, 188, "V 0.00 B/s", &Font12, BLACK, GRAY);
-        }
-        if (u == '1')
-        {
-            getCurrentDownloadRates("usb0", 0, &u_end_download_rates);
-            getCurrentDownloadRates("usb0", 1, &u_end_upload_rates);
-            u_download_rates = u_end_download_rates - u_start_download_rates;
-            u_start_download_rates = u_end_download_rates;
-            char *u_rate;
-            if (u_download_rates >= 1024 && u_download_rates < 1000000)
-            {
-                u_download_rates /= 1024;
-                u_rate = "KB/s";
-            }
-            else if (u_download_rates > 1000000)
-            {
-                u_download_rates /= (1024 * 1024);
-                u_rate = "MB/s";
-            }
-            else
-            {
-                u_rate = "B/s";
-            }
-            sprintf(string, "A %.2lf %s", u_download_rates, u_rate);
-            Paint_DrawString_EN(110, 219, string, &Font12, BLACK, WHITE);
-            u_upload_rates = u_end_upload_rates - u_start_upload_rates;
-            u_start_upload_rates = u_end_upload_rates;
-            if (u_upload_rates >= 1000 && u_upload_rates < 1000000)
-            {
-                u_upload_rates /= 1024;
-                u_rate = "KB/s";
-            }
-            else if (u_upload_rates > 1000000)
-            {
-                u_upload_rates /= (1024 * 1024);
-                u_rate = "MB/s";
-            }
-            else
-            {
-                u_rate = "B/s";
-            }
-            sprintf(string, "V %.2lf %s", u_upload_rates, u_rate);
-            Paint_DrawString_EN(210, 219, string, &Font12, BLACK, WHITE);
-        }
-        else
-        {
-            Paint_DrawString_EN(110, 219, "A 0.00 B/s", &Font12, BLACK, GRAY);
-            Paint_DrawString_EN(210, 219, "V 0.00 B/s", &Font12, BLACK, GRAY);
-        }
-
         /*3.Refresh the picture in RAM to LCD*/
         LCD_2IN_Display((UBYTE *)BlackImage);
         // finish = clock();
@@ -559,7 +434,7 @@ void getCurrentDownloadRates(char *intface, int opt, long int *save_rate)
     return;
 }
 
-char getDefaultIface()
+void getDefaultIface(char iface[])
 {
     char Cmd[100] = {0};
     char buffer[1024];
@@ -570,20 +445,22 @@ char getDefaultIface()
 
     if (NULL == fp)
     {
-        return 'n';
+        strcpy(iface[0],"none");
+        return ;
     }
 
     memset(buffer, 0, sizeof(buffer));
     if (NULL == fgets(buffer, sizeof(buffer), fp))
     {
         pclose(fp);
-        return 'n';
+        strcpy(iface[0],"none");
+        return;
     }
     else
     {
-        sscanf(buffer, "%s %s %s %s %s %s %s %s", readline, readline, readline, readline, readline, readline, readline, readline);
+        sscanf(buffer, "%s %s %s %s %s %s %s %s", readline, readline, readline, readline, readline, readline, readline, iface);
         pclose(fp);
-        return readline[0];
+        return;
     }
 }
 char *getWeekDay(char *weekday)

@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		printf("command error!");
+		exit(1);
 	}
 	return 0;
 }

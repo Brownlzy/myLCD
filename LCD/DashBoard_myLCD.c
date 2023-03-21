@@ -46,19 +46,21 @@ void getDefaultIface(char iface[]);
 char *getWeekDay(char *weekday);
 void setNetworkName(char *net1, char *net2, char *net3);
 void setDefaultNetworkName();
+char *get_model_name(char *buff);
 
 char netName[3][50];
+char modelName[64];
 void setNetworkName(char *net1, char *net2, char *net3)
 {
-    strcpy(netName[0],net1);
-    strcpy(netName[1],net2);
-    strcpy(netName[2],net3);
+    strcpy(netName[0], net1);
+    strcpy(netName[1], net2);
+    strcpy(netName[2], net3);
 }
 void setDefaultNetworkName()
 {
-    strcpy(netName[0],"eth0");
-    strcpy(netName[1],"wlan0");
-    strcpy(netName[2],"usb0");
+    strcpy(netName[0], "eth0");
+    strcpy(netName[1], "wlan0");
+    strcpy(netName[2], "usb0");
 }
 void DashBoard_myLCD(void)
 {
@@ -72,8 +74,10 @@ void DashBoard_myLCD(void)
     long int end_upload_rates[3];
     double download_rates[3];
     double upload_rates[3];
-    char nup[3] = {'0','0','0'};
+    char nup[3] = {'0', '0', '0'};
 
+    get_model_name(modelName);
+    int modelX=(strlen(modelName) * 11 <= 320) ? (320 - strlen(modelName) * 11) / 2 : 0;
     // clock_t start, finish;
     // double Total_time;
 
@@ -88,7 +92,7 @@ void DashBoard_myLCD(void)
     }
 
     /* LCD Init */
-    printf("===myLCD v1.0 By Brownlzy===\r\n");
+    printf("myLCD v1.0 By Brownlzy\r\n");
     LCD_2IN_Init();
     LCD_2IN_Clear(WHITE);
     LCD_SetBacklight(1010);
@@ -115,8 +119,9 @@ void DashBoard_myLCD(void)
         Paint_SetRotate(ROTATE_90);
 
         /*2.Drawing on the image  8x5 12x7 16x11 20x15 14x17*/
-        Paint_DrawString_EN(35, 13, "Raspberry Pi 4B", &Font20, BLACK, WHITE);
-        Paint_DrawString_EN(255, 17, "rev1.4", &Font12, BLACK, WHITE);
+        // Paint_DrawString_EN(35, 13, "Raspberry Pi 4B", &Font20, BLACK, WHITE);
+        // Paint_DrawString_EN(255, 17, "rev1.4", &Font12, BLACK, WHITE);
+        Paint_DrawString_EN(modelX, 15, modelName, &Font16, BLACK, WHITE);
         Paint_DrawString_EN(5, 36, "-----------myLCD v1.0 By Brownlzy-----------", &Font12, BLACK, GRAY);
 
         //显示时间
@@ -186,8 +191,8 @@ void DashBoard_myLCD(void)
         {
             if (get_IP(netName[i], string) == 0)
             {
-                if (strcmp(iface, netName[i])==0)
-                    Paint_DrawString_EN(96, 149 + 31 * i, ">", &Font16, BLACK, GREEN);
+                if (strcmp(iface, netName[i]) == 0)
+                    Paint_DrawString_EN(96, 149 + 31 * i, "*", &Font16, BLACK, GREEN);
                 else
                     Paint_DrawString_EN(96, 149 + 31 * i, "+", &Font16, BLACK, WHITE);
                 Paint_DrawString_EN(110, 145 + 31 * i, netName[i], &Font12, BLACK, WHITE);
@@ -228,8 +233,8 @@ void DashBoard_myLCD(void)
                     rate = "B/s";
                 }
                 sprintf(string, "A %.2lf %s", download_rates[i], rate);
-                Paint_DrawString_EN(110, 157+31*i, string, &Font12, BLACK, WHITE);
-                upload_rates[i] = end_upload_rates[i] - start_upload_rates[i];
+                Paint_DrawString_EN(110, 157 + 31 * i, string, &Font12, BLACK, WHITE);
+                upload_rates[i] = (end_upload_rates[i] - start_upload_rates[i]) * 0.6;
                 start_upload_rates[i] = end_upload_rates[i];
                 if (upload_rates[i] >= 1000 && upload_rates[i] < 1000000)
                 {
@@ -246,12 +251,12 @@ void DashBoard_myLCD(void)
                     rate = "B/s";
                 }
                 sprintf(string, "V %.2lf %s", upload_rates[i], rate);
-                Paint_DrawString_EN(210, 157+31*i, string, &Font12, BLACK, WHITE);
+                Paint_DrawString_EN(210, 157 + 31 * i, string, &Font12, BLACK, WHITE);
             }
             else
             {
-                Paint_DrawString_EN(110, 157+31*i, "A 0.00 B/s", &Font12, BLACK, GRAY);
-                Paint_DrawString_EN(210, 157+31*i, "V 0.00 B/s", &Font12, BLACK, GRAY);
+                Paint_DrawString_EN(110, 157 + 31 * i, "A 0.00 B/s", &Font12, BLACK, GRAY);
+                Paint_DrawString_EN(210, 157 + 31 * i, "V 0.00 B/s", &Font12, BLACK, GRAY);
             }
         }
         /*3.Refresh the picture in RAM to LCD*/
@@ -262,7 +267,7 @@ void DashBoard_myLCD(void)
         //	if (Total_time < 1000 && Total_time >0)
         //	    DEV_Delay_ms(1000-(int)Total_time);
         //	else
-        DEV_Delay_ms(889);
+        DEV_Delay_ms(1000);
         //	printf("%lf\n",Total_time);
     } while (1);
 
@@ -335,6 +340,41 @@ char *get_temperature(char *buff)
     sprintf(buff, "%4.1f'C", tmp / 1000.);
     return buff;
 }
+char *strrpc(char *str, char *oldstr, char *newstr)
+{
+    char bstr[strlen(str)]; //转换缓冲区
+    memset(bstr, 0, sizeof(bstr));
+    for (int i = 0; i < strlen(str); i++)
+    {
+        if (!strncmp(str + i, oldstr, strlen(oldstr)))
+        { //查找目标字符串
+            strcat(bstr, newstr);
+            i += strlen(oldstr) - 1;
+        }
+        else
+        {
+            strncat(bstr, str + i, 1); //保存一字节进缓冲区
+        }
+    }
+    strcpy(str, bstr);
+    return str;
+}
+char *get_model_name(char *buff)
+{
+    FILE *fd;
+    fd = fopen("/proc/device-tree/model", "r");
+    if (fd == NULL)
+    {
+        perror("fopen:");
+        exit(0);
+    }
+    fgets(buff, 64 * sizeof(char), fd);
+    fclose(fd);
+    strrpc(buff,"y P","yP");
+    strrpc(buff," Model ","");
+    strrpc(buff,"Rev ","rev");
+    return buff;
+}
 
 int get_IP(const char *eth_inf, char *ip)
 {
@@ -384,7 +424,7 @@ char *get_sysinfo(int opt, char *string)
             strcpy(string, info_buff);
             break;
         case 2:
-            sprintf(info_buff, "%01ld:%01ld:%02ld", s_info.uptime / 60 / 60, s_info.uptime / 60 % 60, s_info.uptime % 60);
+            sprintf(info_buff, "%01ld:%02ld:%02ld", s_info.uptime / 60 / 60, s_info.uptime / 60 % 60, s_info.uptime % 60);
             strcpy(string, info_buff);
             break;
         }
@@ -445,15 +485,15 @@ void getDefaultIface(char iface[])
 
     if (NULL == fp)
     {
-        strcpy(iface[0],"none");
-        return ;
+        strcpy(iface[0], "none");
+        return;
     }
 
     memset(buffer, 0, sizeof(buffer));
     if (NULL == fgets(buffer, sizeof(buffer), fp))
     {
         pclose(fp);
-        strcpy(iface[0],"none");
+        strcpy(iface[0], "none");
         return;
     }
     else

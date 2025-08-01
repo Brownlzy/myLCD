@@ -474,35 +474,37 @@ void getCurrentDownloadRates(char *intface, int opt, long int *save_rate)
     return;
 }
 
-void getDefaultIface(char iface[])
-{
-    char Cmd[100] = {0};
-    char buffer[1024];
-    char readline[100] = {0};
-    memset(Cmd, 0, sizeof(Cmd));
-    sprintf(Cmd, "netstat -r|grep default");
-    FILE *fp = popen(Cmd, "r");
-
-    if (NULL == fp)
-    {
-        strcpy(iface[0], "none");
+void getDefaultIface(char iface[]) {
+    FILE *fp = fopen("/proc/net/route", "r");
+    if (fp == NULL) {
+        strcpy(iface, "none");
         return;
     }
 
-    memset(buffer, 0, sizeof(buffer));
-    if (NULL == fgets(buffer, sizeof(buffer), fp))
-    {
-        pclose(fp);
-        strcpy(iface[0], "none");
-        return;
+    char line[256];
+    // 跳过第一行标题
+    fgets(line, sizeof(line), fp);
+
+    while (fgets(line, sizeof(line), fp)) {
+        char iface_name[32];
+        char destination[16];
+        int flags;
+
+        if (sscanf(line, "%31s %15s %*s %X", iface_name, destination, &flags) != 3)
+            continue;
+
+        // 目标地址为 00000000 表示默认路由，flag 中 0x2 表示该项是一个网关（UG）
+        if (strcmp(destination, "00000000") == 0 && (flags & 0x2)) {
+            strncpy(iface, iface_name, IFNAMSIZ);
+            fclose(fp);
+            return;
+        }
     }
-    else
-    {
-        sscanf(buffer, "%s %s %s %s %s %s %s %s", readline, readline, readline, readline, readline, readline, readline, iface);
-        pclose(fp);
-        return;
-    }
+
+    fclose(fp);
+    strcpy(iface, "none");
 }
+
 char *getWeekDay(char *weekday)
 {
     time_t now;
